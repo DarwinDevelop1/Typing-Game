@@ -1,38 +1,133 @@
+/* src/App.css - (Este es el mismo CSS de la respuesta anterior, no necesita cambios) */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #282c34;
+    color: white;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
+}
+
 .App {
-  text-align: center;
+    width: 90%;
+    max-width: 600px;
+    background-color: #3a3f47;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.App-header h1 {
+    color: #61dafb;
+    margin-bottom: 30px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.start-button,
+.restart-button {
+    background-color: #61dafb;
+    color: #282c34;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 20px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+    .start-button:hover,
+    .restart-button:hover {
+        background-color: #52b8d8;
+        transform: translateY(-2px);
+    }
+
+.game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
 }
 
-.App-link {
-  color: #61dafb;
+.timer,
+.score {
+    font-size: 1.2em;
+    margin: 5px 0;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.word-display {
+    font-size: 2.5em;
+    letter-spacing: 2px;
+    padding: 15px;
+    background-color: #4a4f57;
+    border-radius: 5px;
+    min-height: 60px; /* To prevent layout jumps */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+    .word-display span {
+        transition: color 0.2s ease-in-out, text-shadow 0.2s ease-in-out;
+    }
+
+    .word-display .correct {
+        color: #76ff03; /* Bright green */
+        text-shadow: 0 0 5px #76ff03;
+    }
+
+    .word-display .incorrect {
+        color: #ff5252; /* Bright red */
+        text-decoration: line-through; /* Optional */
+        text-shadow: 0 0 5px #ff5252;
+    }
+
+.game-area input[type="text"] {
+    padding: 12px;
+    font-size: 1.2em;
+    width: 80%;
+    max-width: 300px;
+    border: 2px solid #61dafb;
+    border-radius: 5px;
+    background-color: #282c34;
+    color: white;
+    text-align: center;
+}
+
+    .game-area input[type="text"]:focus {
+        outline: none;
+        box-shadow: 0 0 10px #61dafb;
+    }
+
+.game-over {
+    padding: 20px;
+}
+
+    .game-over h2 {
+        color: #ff5252;
+        margin-bottom: 15px;
+    }
+
+    .game-over p {
+        font-size: 1.3em;
+        margin: 10px 0;
+    }
+
+/* Simple fade-in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.start-button, .game-area, .game-over {
+    animation: fadeIn 0.5s ease-out;
 }
