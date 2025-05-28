@@ -2,7 +2,7 @@
 
 ## 🎮 Live Demo
 
-[**Play the Game Here!**](https://DarwinDevelop1.github.io/Typing-Game) <!-- Placeholder -->
+[**Play the Game Here!**](https://DarwinDevelop1.github.io/Typing-Game)
 
 ## 🌟 Overview
 
