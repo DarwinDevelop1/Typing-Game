@@ -1,8 +1,8 @@
-/* src/App.css */
+
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Poppins:wght@400;600&display=swap');
 
 body {
-    font-family: 'Poppins', sans-serif; /* Fuente general más moderna */
+    font-family: 'Poppins', sans-serif;
     background: linear-gradient(135deg, #232526 0%, #414345 100%);
     color: #e0e0e0;
     margin: 0;
@@ -11,27 +11,35 @@ body {
     align-items: center;
     min-height: 100vh;
     text-align: center;
-    overflow-x: hidden; /* Prevenir scroll horizontal por animaciones */
+    overflow-x: hidden;
 }
 
 .App {
     width: 90%;
-    max-width: 700px; /* Un poco más ancho */
-    background-color: rgba(40, 44, 52, 0.85); /* Ligeramente transparente */
+    max-width: 700px;
+    background-color: rgba(40, 44, 52, 0.85);
     padding: 30px 40px;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(5px); /* Efecto "glassmorphism" sutil */
+    backdrop-filter: blur(5px);
+    position: relative; /* Para el botón de sonido absoluto */
 }
 
-.App-header h1 {
-    font-family: 'Roboto Mono', monospace; /* Fuente monoespaciada para el título */
-    color: #61dafb;
+.App-header {
+    position: relative; /* Para que el botón de sonido se posicione relativo a este header */
     margin-bottom: 30px;
-    font-size: 2.8em; /* Más grande */
-    text-shadow: 0 0 10px rgba(97, 218, 251, 0.5);
-    animation: titleGlow 2s infinite alternate ease-in-out;
 }
+
+    .App-header h1 {
+        font-family: 'Roboto Mono', monospace;
+        color: #61dafb;
+        font-size: 2.8em;
+        text-shadow: 0 0 10px rgba(97, 218, 251, 0.5);
+        animation: titleGlow 2s infinite alternate ease-in-out;
+        margin-top: 0; /* Ajuste para que no se solape con el botón de sonido */
+        margin-bottom: 0; /* Ajuste para que no se solape con el botón de sonido */
+        padding-top: 20px; /* Espacio para el botón de sonido si se pone arriba */
+    }
 
 @keyframes titleGlow {
     from {
@@ -42,6 +50,26 @@ body {
         text-shadow: 0 0 20px rgba(97, 218, 251, 0.7);
     }
 }
+
+.sound-toggle-button {
+    position: absolute;
+    top: -10px; /* Ajusta según el padding del .App o .App-header */
+    right: 0px; /* Ajusta según el padding del .App */
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 8px 10px;
+    font-size: 1.2em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    z-index: 10;
+}
+
+    .sound-toggle-button:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: #61dafb;
+    }
 
 .start-button,
 .restart-button {
@@ -71,11 +99,49 @@ body {
         box-shadow: 0 4px 10px rgba(97, 218, 251, 0.3);
     }
 
+.duration-selector {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+    .duration-selector label {
+        font-size: 1em;
+        color: #c0c0c0;
+    }
+
+    .duration-selector select {
+        padding: 8px 12px;
+        font-size: 1em;
+        font-family: 'Roboto Mono', monospace;
+        background-color: rgba(25, 28, 32, 0.8);
+        color: #e0e0e0;
+        border: 1px solid #61dafb;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .duration-selector select:focus {
+            outline: none;
+            box-shadow: 0 0 8px rgba(97, 218, 251, 0.4);
+        }
+
+        .duration-selector select:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
 .game-area {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 25px; /* Más espaciado */
+    gap: 25px;
     animation: slideInUp 0.5s ease-out;
 }
 
@@ -101,11 +167,11 @@ body {
 .timer,
 .score {
     font-family: 'Roboto Mono', monospace;
-    font-size: 1.4em; /* Más grande */
+    font-size: 1.4em;
     padding: 10px 20px;
     background-color: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
-    min-width: 150px; /* Para que no salten tanto */
+    min-width: 150px;
 }
 
     .timer.low-time {
@@ -126,8 +192,8 @@ body {
 }
 
 .word-display {
-    font-family: 'Roboto Mono', monospace; /* Fuente monoespaciada para la palabra */
-    font-size: 2.8em; /* Más grande */
+    font-family: 'Roboto Mono', monospace;
+    font-size: 2.8em;
     letter-spacing: 3px;
     padding: 20px;
     background-color: rgba(0, 0, 0, 0.2);
@@ -140,10 +206,9 @@ body {
     transition: border-color 0.3s ease;
     width: 95%;
     box-sizing: border-box;
-    position: relative; /* Para el cursor */
+    position: relative;
 }
 
-    /* Sutil efecto de neón en la palabra */
     .word-display.active-word {
         border-color: #61dafb;
         box-shadow: 0 0 15px rgba(97, 218, 251, 0.3);
@@ -151,7 +216,7 @@ body {
 
     .word-display span {
         transition: color 0.1s ease-in-out, text-shadow 0.1s ease-in-out, opacity 0.3s ease;
-        opacity: 0.7; /* Letras no escritas un poco más tenues */
+        opacity: 0.7;
         position: relative;
     }
 
@@ -168,7 +233,7 @@ body {
     .word-display .incorrect {
         color: #ff4d4d;
         text-shadow: 0 0 8px #ff4d4d;
-        text-decoration: none; /* Quitar tachado, el color es suficiente */
+        text-decoration: none;
         opacity: 1;
         animation: shakeChar 0.3s ease-in-out;
     }
@@ -187,7 +252,6 @@ body {
     }
 }
 
-/* Pseudo-cursor para la siguiente letra a teclear */
 .word-display span.cursor::after {
     content: '';
     position: absolute;
@@ -240,7 +304,7 @@ body {
     0%, 100% {
         transform: translateX(0) scale(1.02);
     }
-    /* Mantener el scale del focus */
+
     25% {
         transform: translateX(-6px) scale(1.02);
     }
@@ -250,10 +314,9 @@ body {
     }
 }
 
-
 .game-over {
     padding: 30px;
-    animation: fadeInScaleUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efecto "pop" */
+    animation: fadeInScaleUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes fadeInScaleUp {
@@ -286,54 +349,12 @@ body {
         color: #61dafb;
     }
 
-/* Animación cuando una palabra se completa correctamente */
-.word-completed-animation .word-display span {
-    animation: charFlyOut 0.5s forwards ease-in-out;
-}
-
-@keyframes charFlyOut {
-    0% {
-        opacity: 1;
-        transform: translateY(0) rotate(0deg) scale(1);
-    }
-
-    100% {
-        opacity: 0;
-        transform: translateY(-30px) rotate(30deg) scale(0.5);
-    }
-}
-
-/* Para que la nueva palabra aparezca con un efecto */
-.new-word-entry .word-display span {
-    opacity: 0;
-    animation: charFlyIn 0.3s forwards ease-out;
-    animation-delay: calc(var(--char-index) * 0.03s); /* Animación escalonada */
-}
-
-@keyframes charFlyIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.8);
-    }
-
-    to {
-        opacity: 0.7; /* Vuelve a la opacidad base para no escritas */
-        transform: translateY(0) scale(1);
-    }
-}
-
-.new-word-entry .word-display span.typed.correct,
-.new-word-entry .word-display span.typed.incorrect {
-    opacity: 1; /* Si por alguna razón ya está tipeada */
-}
-/* src/App.css - Estilos del Leaderboard */
-
 .leaderboard-container {
     margin-top: 30px;
     padding: 20px;
     background-color: rgba(0, 0, 0, 0.15);
     border-radius: 8px;
-    animation: fadeIn 0.5s ease-out 0.2s backwards; /* Aparece con delay */
+    animation: fadeIn 0.5s ease-out 0.2s backwards;
 }
 
     .leaderboard-container h3 {
@@ -368,22 +389,21 @@ body {
         }
 
         .leaderboard-list li span {
-            flex-shrink: 0; /* Previene que los spans se encojan demasiado */
+            flex-shrink: 0;
         }
 
             .leaderboard-list li span:first-child {
                 font-weight: 600;
-                min-width: 150px; /* Ajusta según necesites */
+                min-width: 150px;
                 text-align: left;
             }
 
             .leaderboard-list li span:nth-child(2),
             .leaderboard-list li span:nth-child(3) {
-                min-width: 120px; /* Ajusta según necesites */
+                min-width: 120px;
                 text-align: right;
                 margin-left: 10px;
             }
-
 
 .leaderboard-date {
     font-size: 0.85em;
@@ -391,4 +411,64 @@ body {
     min-width: 80px;
     text-align: right;
     margin-left: 10px;
+}
+
+/* Animación cuando una palabra se completa correctamente */
+.word-completed-animation .word-display span {
+    animation: charFlyOut 0.5s forwards ease-in-out;
+}
+
+@keyframes charFlyOut {
+    0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-30px) rotate(30deg) scale(0.5);
+    }
+}
+
+/* Para que la nueva palabra aparezca con un efecto */
+.new-word-entry .word-display span {
+    opacity: 0;
+    animation: charFlyIn 0.3s forwards ease-out;
+    animation-delay: calc(var(--char-index) * 0.03s);
+}
+
+@keyframes charFlyIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.8);
+    }
+
+    to {
+        opacity: 0.7;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.new-word-entry .word-display span.typed.correct,
+.new-word-entry .word-display span.typed.incorrect {
+    opacity: 1;
+}
+
+/* Animación genérica de fadeIn (reutilizada) */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Aplicar fadeIn a elementos que no tienen animaciones más específicas */
+.start-button,
+.game-over > button.restart-button { /* Solo al botón de restart si no a todo el game-over que ya tiene una */
+    animation: fadeIn 0.5s ease-out;
 }

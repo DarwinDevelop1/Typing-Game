@@ -1,7 +1,72 @@
-// src/App.js
-import React, { useState, useEffect, useRef } from 'react';
-import './App.css'; // El mismo App.css de antes funciona bien
+ï»¿// src/App.js
+import React, { useState, useEffect, useRef, useCallback } from 'react'; // AÃ±adido useCallback
+import './App.css';
+// Importar los nuevos componentes
+import TimerDisplay from './components/TimerDisplay';
+import ScoreDisplay from './components/ScoreDisplay';
+import WordDisplay from './components/WordDisplay';
+import TypingInput from './components/TypingInput';
+import GameControls from './components/GameControls';
+import GameOverScreen from './components/GameOverScreen';
 
+// --- Web Audio API Setup ---
+let audioCtx;
+const getAudioContext = () => {
+    if (!audioCtx && (typeof window !== 'undefined')) { // Check for window for SSR safety
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.error("Web Audio API is not supported or could not be initialized.", e);
+            audioCtx = null; // Ensure it's null if failed
+        }
+    }
+    return audioCtx;
+};
+
+const playTone = (frequency, duration = 100, type = 'sine', volume = 0.3) => {
+    try {
+        const context = getAudioContext();
+        if (!context || context.state === 'suspended') {
+            // Attempt to resume context if suspended (e.g., due to autoplay policies)
+            context?.resume().then(() => {
+                if (context.state === 'running') {
+                    // Retry playing tone now that context is running
+                    playToneInternal(context, frequency, duration, type, volume);
+                }
+            });
+            if (context?.state !== 'running') return; // Don't proceed if not running
+        }
+        playToneInternal(context, frequency, duration, type, volume);
+    } catch (error) {
+        console.warn("Web Audio API error in playTone:", error);
+    }
+};
+
+const playToneInternal = (context, frequency, duration, type, volume) => {
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+
+    gainNode.gain.setValueAtTime(volume, context.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, context.currentTime + duration / 1000);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+
+    oscillator.start();
+    oscillator.stop(context.currentTime + duration / 1000);
+}
+
+
+const SOUNDS = {
+    TYPE_CORRECT: () => playTone(880, 50, 'triangle', 0.2),
+    TYPE_ERROR: () => playTone(220, 100, 'square', 0.15),
+    WORD_COMPLETE: () => playTone(1200, 150, 'sine', 0.25),
+    GAME_OVER: () => playTone(150, 500, 'sawtooth', 0.2),
+};
+// --- Fin Web Audio API Setup ---
 const ENGLISH_WORDS = [
     "ability", "able", "about", "above", "accept", "according", "account", "across", "action", "activity",
     "actually", "address", "admin", "advance", "affect", "after", "again", "against", "agency", "agent",
@@ -104,244 +169,226 @@ const ENGLISH_WORDS = [
     "would", "wound", "writer", "wrong", "yellow", "yield", "young", "yourself", "youth", "zone"
 ];
 
-const GAME_DURATION = 60;
 const LEADERBOARD_KEY = 'typingGameLeaderboard';
 const MAX_LEADERBOARD_ENTRIES = 5;
+const AVAILABLE_DURATIONS = [30, 60, 90, 120];
 
 function App() {
+    const [selectedDuration, setSelectedDuration] = useState(60);
+    const [timeLeft, setTimeLeft] = useState(selectedDuration);
+    const [score, setScore] = useState(0);
     const [currentWord, setCurrentWord] = useState('');
     const [typedText, setTypedText] = useState('');
-    const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
-    const [score, setScore] = useState(0);
     const [gameStarted, setGameStarted] = useState(false);
     const [gameOver, setGameOver] = useState(false);
     const [inputErrorShake, setInputErrorShake] = useState(false);
     const [wordCompleted, setWordCompleted] = useState(false);
     const [newWordEntry, setNewWordEntry] = useState(false);
-    const [leaderboard, setLeaderboard] = useState([]); // Estado para el leaderboard
+    const [leaderboard, setLeaderboard] = useState([]);
+    const [soundsEnabled, setSoundsEnabled] = useState(true);
 
     const inputRef = useRef(null);
-    const wordDisplayRef = useRef(null);
+    const audioContextInitialized = useRef(false);
 
-    // Cargar leaderboard desde localStorage al montar
+    const initializeAudio = useCallback(() => {
+        if (!audioContextInitialized.current) {
+            const context = getAudioContext();
+            if (context && context.state === 'suspended') {
+                context.resume().catch(err => console.warn("Error resuming AudioContext on demand:", err));
+            }
+            audioContextInitialized.current = true;
+        }
+    }, []);
+
     useEffect(() => {
         const loadedScores = JSON.parse(localStorage.getItem(LEADERBOARD_KEY)) || [];
         setLeaderboard(loadedScores);
     }, []);
 
-    const getRandomWord = () => {
+    const getRandomWord = useCallback(() => {
         const randomIndex = Math.floor(Math.random() * ENGLISH_WORDS.length);
         return ENGLISH_WORDS[randomIndex];
-    };
+    }, []);
 
     const resetWordAnimations = () => {
         setWordCompleted(false);
         setNewWordEntry(false);
     };
 
-    const prepareNewWord = () => {
+    const prepareNewWord = useCallback(() => {
         const newWord = getRandomWord();
         setCurrentWord(newWord);
         setTypedText('');
         setNewWordEntry(true);
-        setTimeout(() => setNewWordEntry(false), 500 + newWord.length * 30);
-    };
+        const animationDuration = 500 + newWord.length * 30;
+        setTimeout(() => setNewWordEntry(false), animationDuration);
+    }, [getRandomWord]);
 
-    const startGame = () => {
+    const saveScoreToLeaderboard = useCallback((playerName, finalScore, finalWPM) => {
+        const newEntry = { name: playerName, score: finalScore, wpm: finalWPM, date: new Date().toLocaleDateString() };
+        setLeaderboard(prevLeaderboard => {
+            const updatedLeaderboard = [...prevLeaderboard, newEntry]
+                .sort((a, b) => b.score - a.score || b.wpm - a.wpm)
+                .slice(0, MAX_LEADERBOARD_ENTRIES);
+            localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(updatedLeaderboard));
+            return updatedLeaderboard;
+        });
+    }, []);
+
+    const handleActualGameStart = () => {
+        initializeAudio();
         resetWordAnimations();
-        setTimeLeft(GAME_DURATION);
+        setTimeLeft(selectedDuration);
         setScore(0);
+        setTypedText(''); // Asegurar que el input estÃ© limpio
         setGameStarted(true);
         setGameOver(false);
         prepareNewWord();
-        // NO VAMOS A PONER inputRef.current.focus() AQUÍ AÚN para simular el error
     };
 
-    const calculateWPM = () => {
-        if (score === 0) return 0; // Si no hay score, WPM es 0
-        // Si el juego no ha terminado, calculamos sobre el tiempo transcurrido
-        // Si el juego terminó, calculamos sobre la duración total del juego
-        const timeSpentInMinutes = gameOver ? (GAME_DURATION / 60) : (GAME_DURATION - timeLeft) / 60;
-        if (timeSpentInMinutes === 0) return 0;
-        const wordsTyped = score / 5; // Asumiendo 5 caracteres por palabra
-        return Math.round(wordsTyped / timeSpentInMinutes);
+    const returnToSetup = () => {
+        setGameOver(false);
+        setGameStarted(false);
+        // No es necesario resetear timeLeft aquÃ­, ya que se harÃ¡ al elegir la duraciÃ³n o al iniciar
     };
 
-    // Guardar puntuación en el leaderboard
-    const saveScoreToLeaderboard = (playerName, finalScore, finalWPM) => {
-        const newEntry = {
-            name: playerName,
-            score: finalScore,
-            wpm: finalWPM,
-            date: new Date().toLocaleDateString()
-        };
-        const updatedLeaderboard = [...leaderboard, newEntry]
-            .sort((a, b) => b.score - a.score || b.wpm - a.wpm) // Ordenar por score, luego por WPM
-            .slice(0, MAX_LEADERBOARD_ENTRIES); // Mantener solo los mejores N
-
-        setLeaderboard(updatedLeaderboard);
-        localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(updatedLeaderboard));
-    };
+    const calculateWPM = useCallback(() => {
+        if (score === 0) return 0;
+        const timeSpentSoFar = selectedDuration - timeLeft;
+        if (timeSpentSoFar <= 0 && timeLeft < selectedDuration && gameStarted) return 0;
+        const durationInMinutes = gameOver ? (selectedDuration / 60) : (timeSpentSoFar / 60);
+        if (durationInMinutes === 0) return 0;
+        const wordsTyped = score / 5;
+        return Math.round(wordsTyped / durationInMinutes);
+    }, [score, timeLeft, gameOver, gameStarted, selectedDuration]);
 
     useEffect(() => {
         let timerId;
         if (gameStarted && timeLeft > 0 && !gameOver) {
-            timerId = setTimeout(() => {
-                setTimeLeft(prevTime => prevTime - 1);
-            }, 1000);
-        } else if (timeLeft === 0 && gameStarted && !gameOver) { // Asegurarse que no se ejecute si ya es gameOver
+            timerId = setTimeout(() => setTimeLeft(prevTime => prevTime - 1), 1000);
+        } else if (timeLeft === 0 && gameStarted && !gameOver) {
+            if (soundsEnabled) SOUNDS.GAME_OVER();
             setGameOver(true);
             setGameStarted(false);
             resetWordAnimations();
-
-            // Retrasar un poco el prompt para que el estado de gameOver se actualice en la UI
-            setTimeout(() => {
-                const finalScore = score; // Capturar el score actual
-                const finalWPM = calculateWPM(); // Calcular WPM con el estado actual
+            (async () => {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                const finalScore = score;
+                const finalWPM = calculateWPM();
                 if (finalScore > 0) {
-                    const playerName = prompt(`Game Over!\nYour Score: ${finalScore}, WPM: ${finalWPM}\nEnter your name for the leaderboard:`, "Player");
-                    if (playerName) {
-                        saveScoreToLeaderboard(playerName, finalScore, finalWPM);
-                    }
+                    const playerName = prompt(`Game Over!\nYour Score: ${finalScore}, WPM: ${finalWPM}\nEnter your name:`, "Player");
+                    if (playerName) saveScoreToLeaderboard(playerName.trim() || "Player", finalScore, finalWPM);
                 } else {
                     alert(`Game Over!\nYour Score: ${finalScore}, WPM: ${finalWPM}`);
                 }
-            }, 100); // Pequeño delay
+            })();
         }
         return () => clearTimeout(timerId);
-        // OJO: Añadimos 'score' a las dependencias para que 'finalScore' y 'finalWPM' se capturen correctamente
-        // al final del juego.
-    }, [timeLeft, gameStarted, gameOver, score, saveScoreToLeaderboard]); // Añadir saveScoreToLeaderboard como dependencia
+    }, [timeLeft, gameStarted, gameOver, score, saveScoreToLeaderboard, calculateWPM, soundsEnabled, selectedDuration]);
+
+
+    useEffect(() => {
+        if (gameStarted && !gameOver && !wordCompleted && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [gameStarted, gameOver, wordCompleted, currentWord]);
 
     const handleInputChange = (e) => {
         if (!gameStarted || gameOver || wordCompleted) return;
-
         const newTypedText = e.target.value;
+        const prevTypedText = typedText;
+
+        initializeAudio();
 
         if (newTypedText.length > 0 && newTypedText.length <= currentWord.length) {
-            const lastTypedChar = newTypedText[newTypedText.length - 1];
-            const correspondingWordChar = currentWord[newTypedText.length - 1];
-            if (lastTypedChar !== correspondingWordChar) {
-                setInputErrorShake(true);
-                setTimeout(() => setInputErrorShake(false), 400);
+            const charIndex = newTypedText.length - 1;
+            const typedChar = newTypedText[charIndex];
+            const expectedChar = currentWord[charIndex];
+            if (newTypedText.length > prevTypedText.length) {
+                if (typedChar === expectedChar) {
+                    if (soundsEnabled) SOUNDS.TYPE_CORRECT();
+                } else {
+                    if (soundsEnabled) SOUNDS.TYPE_ERROR();
+                    setInputErrorShake(true);
+                    setTimeout(() => setInputErrorShake(false), 400);
+                }
             }
         }
-
         setTypedText(newTypedText);
-
         if (newTypedText === currentWord) {
+            if (soundsEnabled) SOUNDS.WORD_COMPLETE();
             setScore(prevScore => prevScore + currentWord.length);
             setWordCompleted(true);
-
             setTimeout(() => {
                 resetWordAnimations();
                 prepareNewWord();
-                // NO VAMOS A PONER inputRef.current.focus() AQUÍ AÚN
             }, 600);
         }
     };
-
-    // No se añade el useEffect para enfocar el input deliberadamente para esta parte
 
     return (
         <div className={`App ${wordCompleted ? 'word-completed-animation' : ''} ${newWordEntry ? 'new-word-entry' : ''}`}>
             <header className="App-header">
                 <h1>Fast Typing Game</h1>
+                <button
+                    onClick={() => {
+                        initializeAudio();
+                        setSoundsEnabled(!soundsEnabled);
+                    }}
+                    className="sound-toggle-button"
+                    title={soundsEnabled ? "Disable Sounds" : "Enable Sounds"}
+                >
+                    {soundsEnabled ? 'ðŸ”Š' : 'ðŸ”‡'}
+                </button>
             </header>
             <main>
-                {(!gameStarted && !gameOver) && ( // Botón de inicio o Leaderboard si no hay juego activo
-                    <>
-                        <button onClick={startGame} className="start-button">
-                            Start Game
-                        </button>
-                        {leaderboard.length > 0 && (
-                            <div className="leaderboard-container">
-                                <h3>Leaderboard (Top {MAX_LEADERBOARD_ENTRIES})</h3>
-                                <ol className="leaderboard-list">
-                                    {leaderboard.map((entry, index) => (
-                                        <li key={index}>
-                                            <span>{index + 1}. {entry.name}</span>
-                                            <span>Score: {entry.score}</span>
-                                            <span>WPM: {entry.wpm}</span>
-                                            <span className="leaderboard-date">{entry.date}</span>
-                                        </li>
-                                    ))}
-                                </ol>
-                            </div>
-                        )}
-                    </>
+                {(!gameStarted && !gameOver) && (
+                    <GameControls
+                        selectedDuration={selectedDuration}
+                        onDurationChange={(newDuration) => {
+                            setSelectedDuration(newDuration);
+                            setTimeLeft(newDuration); // Actualizar timeLeft inmediatamente al cambiar la duraciÃ³n
+                        }}
+                        availableDurations={AVAILABLE_DURATIONS}
+                        onStartGame={handleActualGameStart}
+                        gameStarted={false}
+                        leaderboard={leaderboard}
+                        maxLeaderboardEntries={MAX_LEADERBOARD_ENTRIES}
+                    />
                 )}
 
                 {gameStarted && !gameOver && (
                     <div className="game-area">
                         <div className="stats-container">
-                            <p className={`timer ${timeLeft <= 10 && timeLeft > 0 ? 'low-time' : ''}`}>Time: {timeLeft}s</p>
-                            <p className="score">Score: {score}</p>
+                            <TimerDisplay timeLeft={timeLeft} />
+                            <ScoreDisplay score={score} />
                         </div>
-                        <div ref={wordDisplayRef} className={`word-display ${gameStarted ? 'active-word' : ''}`}>
-                            {currentWord.split('').map((char, index) => {
-                                let charClass = '';
-                                const isTyped = index < typedText.length;
-                                const isCurrentChar = index === typedText.length;
-
-                                if (isTyped) {
-                                    charClass += ' typed';
-                                    if (typedText[index] === char) {
-                                        charClass += ' correct';
-                                    } else {
-                                        charClass += ' incorrect';
-                                    }
-                                }
-                                if (isCurrentChar && gameStarted && !gameOver) {
-                                    charClass += ' cursor';
-                                }
-
-                                const style = newWordEntry ? { '--char-index': index } : {};
-
-                                return <span key={`${currentWord}-${index}`} className={charClass.trim()} style={style}>{char}</span>;
-                            })}
-                        </div>
-                        <input
+                        <WordDisplay
+                            currentWord={currentWord}
+                            typedText={typedText}
+                            gameStarted={gameStarted}
+                            gameOver={gameOver}
+                            newWordEntry={newWordEntry}
+                        />
+                        <TypingInput
                             ref={inputRef}
-                            type="text"
                             value={typedText}
                             onChange={handleInputChange}
                             placeholder="Type the word here..."
                             disabled={!gameStarted || gameOver || wordCompleted}
-                            // autoFocus // Podríamos quitarlo temporalmente si queremos forzar el error de enfoque
-                            autoComplete="off"
-                            spellCheck="false"
                             className={inputErrorShake ? 'input-error-shake' : ''}
                         />
                     </div>
                 )}
 
-                {gameOver && ( // Pantalla de Game Over y Leaderboard
-                    <>
-                        <div className="game-over">
-                            <h2>Game Over!</h2>
-                            <p>Your Final Score: <strong>{score}</strong></p>
-                            <p>WPM: <strong>{calculateWPM()}</strong></p>
-                            <button onClick={startGame} className="restart-button">
-                                Play Again
-                            </button>
-                        </div>
-                        {leaderboard.length > 0 && (
-                            <div className="leaderboard-container">
-                                <h3>Leaderboard (Top {MAX_LEADERBOARD_ENTRIES})</h3>
-                                <ol className="leaderboard-list">
-                                    {leaderboard.map((entry, index) => (
-                                        <li key={index}>
-                                            <span>{index + 1}. {entry.name}</span>
-                                            <span>Score: {entry.score}</span>
-                                            <span>WPM: {entry.wpm}</span>
-                                            <span className="leaderboard-date">{entry.date}</span>
-                                        </li>
-                                    ))}
-                                </ol>
-                            </div>
-                        )}
-                    </>
+                {gameOver && (
+                    <GameOverScreen
+                        score={score}
+                        wpm={calculateWPM()}
+                        onRestartGame={returnToSetup}
+                        leaderboard={leaderboard}
+                        maxLeaderboardEntries={MAX_LEADERBOARD_ENTRIES}
+                    />
                 )}
             </main>
         </div>
