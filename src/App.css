@@ -1,125 +1,88 @@
-/* src/App.css - (Este es el mismo CSS de la respuesta anterior, no necesita cambios) */
+/* src/App.css */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Poppins:wght@400;600&display=swap');
+
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #282c34;
-    color: white;
+    font-family: 'Poppins', sans-serif; /* Fuente general más moderna */
+    background: linear-gradient(135deg, #232526 0%, #414345 100%);
+    color: #e0e0e0;
     margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     text-align: center;
+    overflow-x: hidden; /* Prevenir scroll horizontal por animaciones */
 }
 
 .App {
     width: 90%;
-    max-width: 600px;
-    background-color: #3a3f47;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    max-width: 700px; /* Un poco más ancho */
+    background-color: rgba(40, 44, 52, 0.85); /* Ligeramente transparente */
+    padding: 30px 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px); /* Efecto "glassmorphism" sutil */
 }
 
 .App-header h1 {
+    font-family: 'Roboto Mono', monospace; /* Fuente monoespaciada para el título */
     color: #61dafb;
     margin-bottom: 30px;
+    font-size: 2.8em; /* Más grande */
+    text-shadow: 0 0 10px rgba(97, 218, 251, 0.5);
+    animation: titleGlow 2s infinite alternate ease-in-out;
+}
+
+@keyframes titleGlow {
+    from {
+        text-shadow: 0 0 5px rgba(97, 218, 251, 0.3);
+    }
+
+    to {
+        text-shadow: 0 0 20px rgba(97, 218, 251, 0.7);
+    }
 }
 
 .start-button,
 .restart-button {
-    background-color: #61dafb;
-    color: #282c34;
+    background: linear-gradient(135deg, #61dafb, #1d81a2);
+    color: #1e1e1e;
     border: none;
-    padding: 15px 30px;
-    font-size: 1.2em;
-    border-radius: 5px;
+    padding: 15px 35px;
+    font-size: 1.3em;
+    font-weight: 600;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(97, 218, 251, 0.2);
     margin-top: 20px;
+    letter-spacing: 0.5px;
 }
 
     .start-button:hover,
     .restart-button:hover {
-        background-color: #52b8d8;
-        transform: translateY(-2px);
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 25px rgba(97, 218, 251, 0.4);
+    }
+
+    .start-button:active,
+    .restart-button:active {
+        transform: translateY(-1px) scale(1.02);
+        box-shadow: 0 4px 10px rgba(97, 218, 251, 0.3);
     }
 
 .game-area {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 25px; /* Más espaciado */
+    animation: slideInUp 0.5s ease-out;
 }
 
-.timer,
-.score {
-    font-size: 1.2em;
-    margin: 5px 0;
-}
-
-.word-display {
-    font-size: 2.5em;
-    letter-spacing: 2px;
-    padding: 15px;
-    background-color: #4a4f57;
-    border-radius: 5px;
-    min-height: 60px; /* To prevent layout jumps */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-    .word-display span {
-        transition: color 0.2s ease-in-out, text-shadow 0.2s ease-in-out;
-    }
-
-    .word-display .correct {
-        color: #76ff03; /* Bright green */
-        text-shadow: 0 0 5px #76ff03;
-    }
-
-    .word-display .incorrect {
-        color: #ff5252; /* Bright red */
-        text-decoration: line-through; /* Optional */
-        text-shadow: 0 0 5px #ff5252;
-    }
-
-.game-area input[type="text"] {
-    padding: 12px;
-    font-size: 1.2em;
-    width: 80%;
-    max-width: 300px;
-    border: 2px solid #61dafb;
-    border-radius: 5px;
-    background-color: #282c34;
-    color: white;
-    text-align: center;
-}
-
-    .game-area input[type="text"]:focus {
-        outline: none;
-        box-shadow: 0 0 10px #61dafb;
-    }
-
-.game-over {
-    padding: 20px;
-}
-
-    .game-over h2 {
-        color: #ff5252;
-        margin-bottom: 15px;
-    }
-
-    .game-over p {
-        font-size: 1.3em;
-        margin: 10px 0;
-    }
-
-/* Simple fade-in animation */
-@keyframes fadeIn {
+@keyframes slideInUp {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(30px);
     }
 
     to {
@@ -128,6 +91,304 @@ body {
     }
 }
 
-.start-button, .game-area, .game-over {
-    animation: fadeIn 0.5s ease-out;
+.stats-container {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.timer,
+.score {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1.4em; /* Más grande */
+    padding: 10px 20px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    min-width: 150px; /* Para que no salten tanto */
+}
+
+    .timer.low-time {
+        color: #ff6b6b;
+        animation: pulseWarning 1s infinite ease-in-out;
+    }
+
+@keyframes pulseWarning {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(255, 107, 107, 0.7);
+    }
+}
+
+.word-display {
+    font-family: 'Roboto Mono', monospace; /* Fuente monoespaciada para la palabra */
+    font-size: 2.8em; /* Más grande */
+    letter-spacing: 3px;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(97, 218, 251, 0.3);
+    border-radius: 8px;
+    min-height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: border-color 0.3s ease;
+    width: 95%;
+    box-sizing: border-box;
+    position: relative; /* Para el cursor */
+}
+
+    /* Sutil efecto de neón en la palabra */
+    .word-display.active-word {
+        border-color: #61dafb;
+        box-shadow: 0 0 15px rgba(97, 218, 251, 0.3);
+    }
+
+    .word-display span {
+        transition: color 0.1s ease-in-out, text-shadow 0.1s ease-in-out, opacity 0.3s ease;
+        opacity: 0.7; /* Letras no escritas un poco más tenues */
+        position: relative;
+    }
+
+        .word-display span.typed {
+            opacity: 1;
+        }
+
+    .word-display .correct {
+        color: #a6ff00;
+        text-shadow: 0 0 8px #a6ff00, 0 0 15px #a6ff00;
+        opacity: 1;
+    }
+
+    .word-display .incorrect {
+        color: #ff4d4d;
+        text-shadow: 0 0 8px #ff4d4d;
+        text-decoration: none; /* Quitar tachado, el color es suficiente */
+        opacity: 1;
+        animation: shakeChar 0.3s ease-in-out;
+    }
+
+@keyframes shakeChar {
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-3px);
+    }
+
+    75% {
+        transform: translateX(3px);
+    }
+}
+
+/* Pseudo-cursor para la siguiente letra a teclear */
+.word-display span.cursor::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #61dafb;
+    animation: blinkCursor 1s infinite;
+}
+
+@keyframes blinkCursor {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+.game-area input[type="text"] {
+    padding: 15px;
+    font-size: 1.3em;
+    font-family: 'Roboto Mono', monospace;
+    width: 80%;
+    max-width: 400px;
+    border: 2px solid #61dafb;
+    border-radius: 8px;
+    background-color: rgba(25, 28, 32, 0.8);
+    color: #e0e0e0;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 0px rgba(97, 218, 251, 0);
+}
+
+    .game-area input[type="text"]:focus {
+        outline: none;
+        box-shadow: 0 0 15px rgba(97, 218, 251, 0.5);
+        background-color: rgba(30, 33, 38, 0.9);
+        transform: scale(1.02);
+    }
+
+    .game-area input[type="text"].input-error-shake {
+        animation: inputShake 0.4s ease-in-out;
+        border-color: #ff4d4d;
+    }
+
+@keyframes inputShake {
+    0%, 100% {
+        transform: translateX(0) scale(1.02);
+    }
+    /* Mantener el scale del focus */
+    25% {
+        transform: translateX(-6px) scale(1.02);
+    }
+
+    75% {
+        transform: translateX(6px) scale(1.02);
+    }
+}
+
+
+.game-over {
+    padding: 30px;
+    animation: fadeInScaleUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efecto "pop" */
+}
+
+@keyframes fadeInScaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.game-over h2 {
+    font-family: 'Roboto Mono', monospace;
+    color: #ff6b6b;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+}
+
+.game-over p {
+    font-size: 1.5em;
+    margin: 12px 0;
+    font-family: 'Roboto Mono', monospace;
+}
+
+    .game-over p strong {
+        color: #61dafb;
+    }
+
+/* Animación cuando una palabra se completa correctamente */
+.word-completed-animation .word-display span {
+    animation: charFlyOut 0.5s forwards ease-in-out;
+}
+
+@keyframes charFlyOut {
+    0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-30px) rotate(30deg) scale(0.5);
+    }
+}
+
+/* Para que la nueva palabra aparezca con un efecto */
+.new-word-entry .word-display span {
+    opacity: 0;
+    animation: charFlyIn 0.3s forwards ease-out;
+    animation-delay: calc(var(--char-index) * 0.03s); /* Animación escalonada */
+}
+
+@keyframes charFlyIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.8);
+    }
+
+    to {
+        opacity: 0.7; /* Vuelve a la opacidad base para no escritas */
+        transform: translateY(0) scale(1);
+    }
+}
+
+.new-word-entry .word-display span.typed.correct,
+.new-word-entry .word-display span.typed.incorrect {
+    opacity: 1; /* Si por alguna razón ya está tipeada */
+}
+/* src/App.css - Estilos del Leaderboard */
+
+.leaderboard-container {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    animation: fadeIn 0.5s ease-out 0.2s backwards; /* Aparece con delay */
+}
+
+    .leaderboard-container h3 {
+        font-family: 'Roboto Mono', monospace;
+        color: #61dafb;
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.6em;
+    }
+
+.leaderboard-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+    .leaderboard-list li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        margin-bottom: 8px;
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 5px;
+        font-size: 1.1em;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+        .leaderboard-list li:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .leaderboard-list li span {
+            flex-shrink: 0; /* Previene que los spans se encojan demasiado */
+        }
+
+            .leaderboard-list li span:first-child {
+                font-weight: 600;
+                min-width: 150px; /* Ajusta según necesites */
+                text-align: left;
+            }
+
+            .leaderboard-list li span:nth-child(2),
+            .leaderboard-list li span:nth-child(3) {
+                min-width: 120px; /* Ajusta según necesites */
+                text-align: right;
+                margin-left: 10px;
+            }
+
+
+.leaderboard-date {
+    font-size: 0.85em;
+    color: #a0a0a0;
+    min-width: 80px;
+    text-align: right;
+    margin-left: 10px;
 }
